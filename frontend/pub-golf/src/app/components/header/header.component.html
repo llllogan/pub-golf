@@ -1,0 +1,11 @@
+<div
+  class="bg-blue-600 text-white p-4 flex flex-col md:flex-row items-center justify-between"
+>
+  <div class="text-xl font-bold">
+    Hole {{ currentHoleIndex }}: {{ currentHole.name }} (Par
+    {{ currentHole.par }})
+  </div>
+  <div class="text-sm mt-2 md:mt-0 md:ml-4" *ngIf="nextHole">
+    Next: {{ nextHole.name }} in {{ countdown }}
+  </div>
+</div>
