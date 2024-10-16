@@ -6,7 +6,7 @@ interface Hole {
   id: number;
   name: string;
   par: number;
-  startTime: string; // Adjust if needed
+  time: Date; // Adjust if needed
   location?: string;
 }
 

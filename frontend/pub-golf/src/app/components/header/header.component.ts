@@ -1,10 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { HoleService } from '../../services/hole.service';
+import { ApiService } from '../../services/api.service';
 
 interface Hole {
+  id: number;
   name: string;
   par: number;
-  startTime: Date;
+  time: Date; // Adjust if needed
+  location?: string;
 }
 
 @Component({
@@ -15,49 +19,49 @@ interface Hole {
   styleUrl: './header.component.css'
 })
 export class HeaderComponent implements OnInit {
-  currentHoleIndex: number;
-  currentHole: any;
-  nextHole: any;
+  currentHoleId: number;
+  currentHole: Hole | undefined;
+  nextHole: Hole | undefined;
   countdown: string;
 
-  constructor() {
-    this.currentHoleIndex = 0;
-    this.currentHole = null;
-    this.nextHole = null;
+  constructor(private holeService: HoleService, private apiService: ApiService) { 
     this.countdown = '';
-  }
+    this.currentHoleId = 0;
+   }
 
   ngOnInit(): void {
-    // Initialize current hole index
-    this.currentHoleIndex = 1; // Start from the first hole
-
-    // Initialize holes data
-    const holes = [
-      {
-        name: 'Red Brick Hotel',
-        par: 3,
-        startTime: new Date('2024-10-14T14:00:00'),
-      },
-      {
-        name: 'Brisbane Brewing Co',
-        par: 4,
-        startTime: new Date('2024-10-17T15:34:00'),
-      },
-      // Add more holes as needed
-    ];
-
-    // Set current and next holes based on the current index
-    this.currentHole = holes[this.currentHoleIndex - 1];
-    this.nextHole = holes[this.currentHoleIndex];
+    // Subscribe to currentHoleId$
+    this.holeService.currentHoleId$.subscribe((holeId) => {
+      this.currentHoleId = holeId;
+      // Fetch or update data based on the new Hole Id
+      this.loadHoleData();
+    });
 
     this.updateCountdown();
     setInterval(() => this.updateCountdown(), 1000);
   }
 
+  // Example method to load hole data based on currentHoleId
+  loadHoleData() {
+    this.apiService.getHole(this.currentHoleId).subscribe((hole) => {
+      this.currentHole = hole;
+    });
+
+    this.apiService.getHole(this.currentHoleId + 1).subscribe((hole) => {
+      this.nextHole = hole;
+      this.updateCountdown();
+    });
+  }
+
+  // Method to change the Hole Id (e.g., user clicks "Next Hole")
+  changeHole(holeId: number) {
+    this.holeService.setCurrentHoleId(holeId);
+  }
+
   updateCountdown() {
     if (this.nextHole) {
       const now = new Date();
-      const diff = this.nextHole.startTime.getTime() - now.getTime();
+      const diff = new Date(this.nextHole.time).getTime() - now.getTime();
       if (diff > 0) {
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const minutes = Math.floor((diff / (1000 * 60)) % 60);
