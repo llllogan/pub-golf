@@ -11,18 +11,32 @@
   <!-- Buttons to change the hole -->
   <div class="mt-4 flex space-x-2">
     <button
+    class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+    (click)="changeHole(currentHoleId - 1)"
+    [disabled]="currentHoleId <= 1"
+    >
+      Edit
+    </button>
+    <button
+    class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+    (click)="changeHole(currentHoleId - 1)"
+    [disabled]="currentHoleId <= 1"
+    >
+      Directions
+    </button>
+    <button
       class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
       (click)="changeHole(currentHoleId - 1)"
       [disabled]="currentHoleId <= 1"
     >
-      Previous Hole
+      Previous
     </button>
     <button
       class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
       (click)="changeHole(currentHoleId + 1)"
-      [disabled]="!nextHole"
+      [disabled]="currentHoleId == 9"
     >
-      Next Hole
+      Next
     </button>
   </div>
 </div>
