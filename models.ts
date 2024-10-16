@@ -3,32 +3,50 @@
 import { DB } from "./deps.ts";
 
 /**
- * Database operation functions for users, teams, holes, and scores.
+ * Database operation functions for holes, teams, users, and scores.
  * Each function interacts with the database instance passed as an argument.
  */
 
-/* User Operations */
+/* Hole Operations */
 
-export function getUsers(db: DB): Array<object> {
-  const users = [];
-  for (const [id, name, team_id] of db.query(
-    "SELECT id, name, team_id FROM users"
-  )) {
-    users.push({ id, name, team_id });
+/**
+ * Retrieves a hole by its ID.
+ * @param db - The database connection.
+ * @param hole_id - The ID of the hole.
+ * @returns The hole data or null if not found.
+ */
+export function getHole(db: DB, hole_id: number): object | null {
+  const result = db.query(
+    "SELECT id, name, par FROM holes WHERE id = ?",
+    [hole_id]
+  );
+
+  if (result.length > 0) {
+    const [id, name, par] = result[0];
+    return { id, name, par };
+  } else {
+    return null;
   }
-  return users;
 }
 
-export function addUser(db: DB, name: string, team_id: number | null): void {
-  db.query(
-    "INSERT INTO users (name, team_id) VALUES (?, ?)",
-    [name, team_id]
-  );
+/**
+ * Updates the par of a hole.
+ * @param db - The database connection.
+ * @param hole_id - The ID of the hole.
+ * @param par - The new par value.
+ */
+export function updateHolePar(db: DB, hole_id: number, par: number): void {
+  db.query("UPDATE holes SET par = ? WHERE id = ?", [par, hole_id]);
 }
 
 /* Team Operations */
 
-export function getTeams(db: DB): Array<object> {
+/**
+ * Retrieves all teams.
+ * @param db - The database connection.
+ * @returns A list of teams.
+ */
+export function getAllTeams(db: DB): Array<object> {
   const teams = [];
   for (const [id, name] of db.query("SELECT id, name FROM teams")) {
     teams.push({ id, name });
@@ -36,29 +54,60 @@ export function getTeams(db: DB): Array<object> {
   return teams;
 }
 
-export function addTeam(db: DB, name: string): void {
-  db.query("INSERT INTO teams (name) VALUES (?)", [name]);
-}
+/* User Operations */
 
-/* Hole Operations */
-
-export function getHoles(db: DB): Array<object> {
-  const holes = [];
-  for (const [id, name, par] of db.query(
-    "SELECT id, name, par FROM holes"
+/**
+ * Retrieves all users belonging to a team.
+ * @param db - The database connection.
+ * @param team_id - The ID of the team.
+ * @returns A list of users in the team.
+ */
+export function getUsersByTeam(db: DB, team_id: number): Array<object> {
+  const users = [];
+  for (const [id, name] of db.query(
+    "SELECT id, name FROM users WHERE team_id = ?",
+    [team_id]
   )) {
-    holes.push({ id, name, par });
+    users.push({ id, name });
   }
-  return holes;
+  return users;
 }
 
-export function addHole(db: DB, name: string, par: number): void {
-  db.query("INSERT INTO holes (name, par) VALUES (?, ?)", [name, par]);
+/* Score Operations */
+
+/**
+ * Retrieves the score of a user for a specific hole.
+ * @param db - The database connection.
+ * @param user_id - The ID of the user.
+ * @param hole_id - The ID of the hole.
+ * @returns The number of sips or null if not recorded.
+ */
+export function getUserScoreForHole(
+  db: DB,
+  user_id: number,
+  hole_id: number
+): number | null {
+  const result = db.query(
+    "SELECT sips FROM user_scores WHERE user_id = ? AND hole_id = ?",
+    [user_id, hole_id]
+  );
+
+  if (result.length > 0) {
+    const [sips] = result[0];
+    return sips;
+  } else {
+    return null;
+  }
 }
 
-/* User Scores Operations */
-
-export function addOrUpdateUserScore(
+/**
+ * Updates the score of a user for a specific hole.
+ * @param db - The database connection.
+ * @param user_id - The ID of the user.
+ * @param hole_id - The ID of the hole.
+ * @param sips - The number of sips taken.
+ */
+export function updateUserScoreForHole(
   db: DB,
   user_id: number,
   hole_id: number,
@@ -70,80 +119,4 @@ export function addOrUpdateUserScore(
      ON CONFLICT(user_id, hole_id) DO UPDATE SET sips=excluded.sips`,
     [user_id, hole_id, sips]
   );
-}
-
-export function getUserScores(db: DB, user_id: number): Array<object> {
-  const scores = [];
-  for (const [hole_id, sips] of db.query(
-    "SELECT hole_id, sips FROM user_scores WHERE user_id = ?",
-    [user_id]
-  )) {
-    scores.push({ hole_id, sips });
-  }
-  return scores;
-}
-
-export function getTotalScoreByUser(db: DB, user_id: number): number {
-  const [total] = db.query(
-    "SELECT SUM(sips) FROM user_scores WHERE user_id = ?",
-    [user_id]
-  )[0] || [0];
-  return total;
-}
-
-export function getTeamScoreByHole(
-  db: DB,
-  team_id: number,
-  hole_id: number
-): number {
-  const [total] = db.query(
-    `SELECT SUM(us.sips)
-     FROM user_scores us
-     JOIN users u ON us.user_id = u.id
-     WHERE u.team_id = ? AND us.hole_id = ?`,
-    [team_id, hole_id]
-  )[0] || [0];
-  return total;
-}
-
-export function getTotalScoreByTeam(db: DB, team_id: number): number {
-  const [total] = db.query(
-    `SELECT SUM(us.sips)
-     FROM user_scores us
-     JOIN users u ON us.user_id = u.id
-     WHERE u.team_id = ?`,
-    [team_id]
-  )[0] || [0];
-  return total;
-}
-
-/* Leaderboard Functions */
-
-export function getIndividualLeaderboard(db: DB): Array<object> {
-  const leaderboard = [];
-  for (const [user_id, user_name, total_sips] of db.query(`
-    SELECT u.id, u.name, SUM(us.sips) as total_sips
-    FROM users u
-    LEFT JOIN user_scores us ON u.id = us.user_id
-    GROUP BY u.id
-    ORDER BY total_sips ASC
-  `)) {
-    leaderboard.push({ user_id, user_name, total_sips });
-  }
-  return leaderboard;
-}
-
-export function getTeamLeaderboard(db: DB): Array<object> {
-  const leaderboard = [];
-  for (const [team_id, team_name, total_sips] of db.query(`
-    SELECT t.id, t.name, SUM(us.sips) as total_sips
-    FROM teams t
-    LEFT JOIN users u ON t.id = u.team_id
-    LEFT JOIN user_scores us ON u.id = us.user_id
-    GROUP BY t.id
-    ORDER BY total_sips ASC
-  `)) {
-    leaderboard.push({ team_id, team_name, total_sips });
-  }
-  return leaderboard;
 }
