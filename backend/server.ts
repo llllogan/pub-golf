@@ -19,7 +19,7 @@ const router = initRoutes(db);
 const app = new Application();
 
 app.use(oakCors({
-    origin: "http://localhost:4200",
+    origin: "*",
 })
 );
 

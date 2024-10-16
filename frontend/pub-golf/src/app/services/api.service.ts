@@ -26,7 +26,7 @@ interface Score {
   providedIn: 'root',
 })
 export class ApiService {
-  private apiUrl = 'http://localhost:8000'; // Adjust the URL to match your backend
+  private apiUrl = 'http://10.18.7.152:8000'; // Adjust the URL to match your backend
 
   constructor(private http: HttpClient) {}
 

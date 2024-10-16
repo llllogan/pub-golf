@@ -74,4 +74,20 @@ export class HeaderComponent implements OnInit {
       this.countdown = '';
     }
   }
+
+  // New method to open the current hole's location in the maps app
+  openInMaps() {
+    if (this.currentHole && this.currentHole.location) {
+      const address = encodeURIComponent(this.currentHole.location);
+      const url = this.getMapsUrl(address);
+      window.open(url, '_blank');
+    } else {
+      console.error('No location available for the current hole.');
+    }
+  }
+
+  // Helper method to construct the maps URL
+  private getMapsUrl(address: string): string {
+    return `https://maps.apple.com/?q=${address}`;
+  }
 }

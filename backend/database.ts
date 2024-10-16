@@ -146,7 +146,7 @@ export function initDB(): DB {
       time: "2024-10-19T20:15:00",
     },
     {
-      name: "Winghaus Edward Street",
+      name: "Winghaus",
       par: 0,
       location: "144 Edward Street Brisbane City",
       time: "2024-10-19T21:00:00",
