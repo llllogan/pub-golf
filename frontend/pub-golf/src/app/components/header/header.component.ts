@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 
 interface Hole {
@@ -9,7 +10,7 @@ interface Hole {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
@@ -40,7 +41,7 @@ export class HeaderComponent implements OnInit {
       {
         name: 'Brisbane Brewing Co',
         par: 4,
-        startTime: new Date('2024-10-14T15:34:00'),
+        startTime: new Date('2024-10-17T15:34:00'),
       },
       // Add more holes as needed
     ];
