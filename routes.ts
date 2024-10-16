@@ -74,6 +74,12 @@ export function initRoutes(db: DB): Router {
     const { hole_id } = context.params;
     const holeId = parseInt(hole_id);
     const body = await context.request.body({ type: "json" }).value;
+
+    // Example
+    // {
+    //   "par": 3
+    // }
+    
     const { par } = body;
 
     if (isNaN(holeId) || typeof par !== "number") {
