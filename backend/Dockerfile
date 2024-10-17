@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Expose the port your Deno app listens on (e.g., 8000)
-EXPOSE 10080
+EXPOSE 1080
 
 # Set the command to run your Deno application
 CMD ["run", "--allow-net", "--allow-read", "--allow-write", "server.ts"]
