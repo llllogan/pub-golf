@@ -11,4 +11,4 @@ COPY . .
 EXPOSE 1080
 
 # Set the command to run your Deno application
-CMD ["run", "--allow-net", "--allow-read", "--allow-write", "server.ts"]
+CMD ["deno", "run", "--allow-net", "--allow-read", "--allow-write", "server.ts"]
