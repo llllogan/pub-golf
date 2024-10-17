@@ -9,22 +9,24 @@
     Next: {{ nextHole.name }} in {{ countdown }}
   </div>
   <!-- Buttons to change the hole -->
-  <div class="mt-4 flex space-x-2">
+  <div class="mt-4 flex space-x-2 px-2">
     <button
     class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
-    (click)="changeHole(currentHoleId - 1)"
-    [disabled]="currentHoleId <= 1"
+    *ngIf="!isEditingPar"
+    (click)="enableParEditing()"
     >
       Edit
     </button>
     <button
     class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+    *ngIf="!isEditingPar"
     (click)="openInMaps()"
     >
       Directions
     </button>
     <button
       class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+      *ngIf="!isEditingPar"
       (click)="changeHole(currentHoleId - 1)"
       [disabled]="currentHoleId <= 1"
     >
@@ -32,10 +34,33 @@
     </button>
     <button
       class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+      *ngIf="!isEditingPar"
       (click)="changeHole(currentHoleId + 1)"
       [disabled]="currentHoleId == 9"
     >
       Next
+    </button>
+
+    <div *ngIf="isEditingPar">
+      <input
+        type="number"
+        [(ngModel)]="editedPar"
+        class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+      />
+    </div>
+    <button
+      *ngIf="isEditingPar"
+      class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+      (click)="savePar()"
+    >
+      Save
+    </button>
+    <button
+      *ngIf="isEditingPar"
+      class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+      (click)="cancelParEditing()"
+    >
+      Cancel
     </button>
   </div>
 </div>

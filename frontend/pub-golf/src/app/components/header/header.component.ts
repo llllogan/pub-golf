@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { HoleService } from '../../services/hole.service';
 import { ApiService } from '../../services/api.service';
 
@@ -14,7 +15,7 @@ interface Hole {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
@@ -24,9 +25,14 @@ export class HeaderComponent implements OnInit {
   nextHole: Hole | undefined;
   countdown: string;
 
+    // Variables for editing par
+    isEditingPar: boolean = false;
+    editedPar: number;
+
   constructor(private holeService: HoleService, private apiService: ApiService) { 
     this.countdown = '';
     this.currentHoleId = 0;
+    this.editedPar = 0;
    }
 
   ngOnInit(): void {
@@ -88,6 +94,41 @@ export class HeaderComponent implements OnInit {
 
   // Helper method to construct the maps URL
   private getMapsUrl(address: string): string {
-    return `https://maps.apple.com/?q=${address}`;
+    return `https://maps.apple.com/?daddr=${address}`;
+  }
+
+
+  // Methods for editing par
+  enableParEditing() {
+    this.isEditingPar = true;
+    this.editedPar = this.currentHole!.par;
+  }
+
+  savePar() {
+    const newPar = this.editedPar;
+
+    if (newPar > 0) {
+      this.apiService.updateHolePar(this.currentHoleId, newPar).subscribe(
+        () => {
+          // Update currentHole.par with newPar
+          this.currentHole!.par = newPar;
+          this.isEditingPar = false;
+        },
+        (error) => {
+          // Handle error (e.g., show a message)
+          console.error('Error updating par:', error);
+          // Optionally, provide feedback to the user
+        }
+      );
+    } else {
+      // Handle invalid input (e.g., par <= 0)
+      console.error('Invalid par value');
+      // Optionally, provide feedback to the user
+    }
+  }
+
+  cancelParEditing() {
+    this.isEditingPar = false;
+    this.editedPar = this.currentHole!.par;
   }
 }
