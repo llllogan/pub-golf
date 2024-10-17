@@ -1,1 +1,30 @@
-<p>scorecard works!</p>
+<!-- scorecard.component.html -->
+
+<div class="p-4 space-y-6">
+    <!-- Loop through teams -->
+    <div *ngFor="let team of teams">
+      <!-- Team Header -->
+      <div class="bg-gray-200 p-2 rounded">
+        <h2 class="text-lg font-bold">{{ team.name }}</h2>
+      </div>
+      <!-- Players List -->
+      <div class="space-y-2 mt-2">
+        <div
+          *ngFor="let player of team.players"
+          class="flex items-center justify-between"
+        >
+          <div class="text-gray-700">{{ player.name }}</div>
+          <div>
+            <input
+              type="number"
+              [(ngModel)]="player.sips"
+              (change)="updatePlayerScore(player)"
+              min="0"
+              class="w-20 px-2 py-1 border border-gray-300 rounded"
+              placeholder="Sips"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

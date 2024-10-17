@@ -35,6 +35,18 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
+  /** Team Methods **/
+
+  // Get all teams
+  getTeams(): Observable<Team[]> {
+    return this.http.get<Team[]>(`${this.apiUrl}/teams`);
+  }
+
+  // Get players by team
+  getPlayersByTeam(teamId: number): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/teams/${teamId}/users`);
+  }
+
   /** Hole Methods **/
 
   // Get all holes
