@@ -96,4 +96,14 @@ export class ApiService {
       { sips }
     );
   }
+
+  // Get all scores for a hole
+  getScoresByHole(holeId: number): Observable<Score[]> {
+    return this.http.get<Score[]>(`${this.apiUrl}/holes/${holeId}/scores`);
+  }
+
+  // Get all scores
+  getAllScores(): Observable<Score[]> {
+    return this.http.get<Score[]>(`${this.apiUrl}/scores`);
+  }
 }

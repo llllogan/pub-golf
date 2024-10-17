@@ -15,14 +15,14 @@ interface Team {
   name: string;
 }
 
-interface Player {
+interface User {
   id: number;
   name: string;
   team_id: number;
 }
 
 interface Score {
-  player_id: number;
+  user_id: number;
   hole_id: number;
   sips: number;
 }
@@ -49,6 +49,8 @@ interface TeamResult {
 export class OverallScoresComponent implements OnInit {
   holes: HoleResult[] = [];
   teams: Team[] = [];
+  players: User[] = [];
+  scores: Score[] = [];
   overallWinningTeam: Team | null = null;
 
   constructor(private apiService: ApiService) {}
@@ -58,105 +60,87 @@ export class OverallScoresComponent implements OnInit {
   }
 
   loadOverallScores() {
-    // Fetch all teams and holes
+    // Fetch all necessary data
     forkJoin({
       teams: this.apiService.getTeams(),
       holes: this.apiService.getHoles(),
-    }).subscribe(({ teams, holes }) => {
+      players: this.apiService.getUsers(),
+      scores: this.apiService.getAllScores(),
+    }).subscribe(({ teams, holes, players, scores }) => {
       this.teams = teams;
+      this.players = players;
+      this.scores = scores;
 
-      // For each hole, calculate team averages and determine the winning team
-      const holeObservables = holes.map((hole) =>
-        this.calculateHoleResults(hole, teams)
-      );
+      // Process data
+      this.holes = holes.map((hole) => this.calculateHoleResults(hole));
 
-      forkJoin(holeObservables).subscribe((holeResults) => {
-        this.holes = holeResults;
-
-        // Determine the overall winning team
-        this.determineOverallWinningTeam();
-      });
+      // Determine the overall winning team
+      this.determineOverallWinningTeam();
     });
   }
 
-  calculateHoleResults(hole: Hole, teams: Team[]) {
-    return this.apiService.getScoresByHole(hole.id).pipe(
-      map((scores: Score[]) => {
-        // Map scores to players
-        const playerScoresMap = new Map<number, number>();
-        scores.forEach((score) => {
-          playerScoresMap.set(score.player_id, score.sips);
-        });
+  calculateHoleResults(hole: Hole): HoleResult {
+    // Filter scores for the hole
+    const holeScores = this.scores.filter((score) => score.hole_id === hole.id);
 
-        // Calculate average sips for each team
-        const teamResults: TeamResult[] = teams.map((team) => {
-          const teamPlayers$ = this.apiService.getPlayersByTeam(team.id);
+    // Map player IDs to team IDs
+    const playerTeamMap = new Map<number, number>();
+    this.players.forEach((player) => {
+      playerTeamMap.set(player.id, player.team_id);
+    });
 
-          return {
-            team,
-            averageSips: null,
-            differenceFromPar: null,
-          };
-        });
+    // Map team IDs to their players' scores
+    const teamScoresMap = new Map<number, number[]>();
+    this.teams.forEach((team) => {
+      teamScoresMap.set(team.id, []);
+    });
 
-        // Since we cannot make async calls inside map, we'll handle this differently
-        return {
-          hole,
-          teamResults: teamResults,
-          winningTeam: null,
-        };
-      }),
-      switchMap((holeResult: HoleResult) => {
-        // For each team, fetch players and calculate averages
-        const teamAveragesObservables = holeResult.teamResults.map(
-          (teamResult) =>
-            this.apiService.getPlayersByTeam(teamResult.team.id).pipe(
-              map((players: Player[]) => {
-                const teamScores = players
-                  .map((player) => playerScoresMap.get(player.id))
-                  .filter((sips) => sips !== undefined && sips !== null) as number[];
+    holeScores.forEach((score) => {
+      const teamId = playerTeamMap.get(score.user_id);
+      if (teamId !== undefined) {
+        const teamScores = teamScoresMap.get(teamId);
+        if (teamScores !== undefined) {
+          teamScores.push(score.sips);
+        }
+      }
+    });
 
-                const totalSips = teamScores.reduce((sum, sips) => sum + sips, 0);
-                const averageSips =
-                  teamScores.length > 0 ? totalSips / teamScores.length : null;
+    // Calculate average sips and difference from par for each team
+    const teamResults: TeamResult[] = this.teams.map((team) => {
+      const teamScores = teamScoresMap.get(team.id) || [];
+      const totalSips = teamScores.reduce((sum, sips) => sum + sips, 0);
+      const averageSips =
+        teamScores.length > 0 ? totalSips / teamScores.length : null;
 
-                const differenceFromPar =
-                  averageSips !== null ? averageSips - hole.par : null;
+      const differenceFromPar =
+        averageSips !== null ? averageSips - hole.par : null;
 
-                return {
-                  ...teamResult,
-                  averageSips,
-                  differenceFromPar,
-                };
-              })
-            )
-        );
+      return {
+        team,
+        averageSips,
+        differenceFromPar,
+      };
+    });
 
-        return forkJoin(teamAveragesObservables).pipe(
-          map((teamResults: TeamResult[]) => {
-            // Determine the winning team for the hole
-            let winningTeam: Team | null = null;
-            let lowestAverage = Infinity;
+    // Determine the winning team for the hole
+    let winningTeam: Team | null = null;
+    let lowestAverage = Infinity;
 
-            teamResults.forEach((teamResult) => {
-              if (
-                teamResult.averageSips !== null &&
-                teamResult.averageSips < lowestAverage
-              ) {
-                lowestAverage = teamResult.averageSips;
-                winningTeam = teamResult.team;
-              }
-            });
+    teamResults.forEach((teamResult) => {
+      if (
+        teamResult.averageSips !== null &&
+        teamResult.averageSips < lowestAverage
+      ) {
+        lowestAverage = teamResult.averageSips;
+        winningTeam = teamResult.team;
+      }
+    });
 
-            return {
-              hole: holeResult.hole,
-              teamResults,
-              winningTeam,
-            };
-          })
-        );
-      })
-    );
+    return {
+      hole,
+      teamResults,
+      winningTeam,
+    };
   }
 
   determineOverallWinningTeam() {

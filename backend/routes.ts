@@ -46,7 +46,31 @@ export function initRoutes(db: DB): Router {
     context.response.body = users;
   });
 
+  // Get all users
+  router.get("/users", (context: RouterContext<"/users">) => {
+    try {
+      const users: User[] = models.getAllUsers(db);
+      context.response.body = users;
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      context.response.status = 500;
+      context.response.body = { error: "Internal server error" };
+    }
+  });
+
   /* Hole Endpoints */
+
+  // Get all holes
+  router.get("/holes", (context: RouterContext<"/holes">) => {
+    try {
+      const holes: Hole[] = models.getAllHoles(db);
+      context.response.body = holes;
+    } catch (error) {
+      console.error("Error fetching all holes:", error);
+      context.response.status = 500;
+      context.response.body = { error: "Internal server error" };
+    }
+  });
 
   // Get a hole by ID
   router.get("/holes/:hole_id", (context: RouterContext<"/holes/:hole_id">) => {
@@ -178,6 +202,18 @@ export function initRoutes(db: DB): Router {
     const scores: Score[] = models.getScoresByHole(db, holeId);
 
     context.response.body = scores;
+  });
+
+  // Get all scores
+  router.get("/scores", (context: RouterContext<"/scores">) => {
+    try {
+      const scores: Score[] = models.getAllScores(db);
+      context.response.body = scores;
+    } catch (error) {
+      console.error("Error fetching all scores:", error);
+      context.response.status = 500;
+      context.response.body = { error: "Internal server error" };
+    }
   });
 
   return router;
