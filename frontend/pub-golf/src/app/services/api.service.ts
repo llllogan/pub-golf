@@ -13,13 +13,18 @@ interface Hole {
 interface User {
   id: number;
   name: string;
-  team_id?: number;
+  team_id: number;
 }
 
 interface Score {
   user_id: number;
   hole_id: number;
   sips: number;
+}
+
+interface Team {
+  id: number;
+  name: string;
 }
 
 @Injectable({
