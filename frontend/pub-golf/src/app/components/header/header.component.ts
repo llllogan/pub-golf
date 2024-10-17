@@ -55,14 +55,10 @@ export class HeaderComponent implements OnInit {
       this.currentHole = hole;
     });
 
-    if (this.currentHole!.id > 9) {
-      this.nextHole = undefined;
-    } else {
-      this.apiService.getHole(this.currentHoleId + 1).subscribe((hole) => {
-        this.nextHole = hole;
-        this.updateCountdown();
-      });
-    }
+    this.apiService.getHole(this.currentHoleId + 1).subscribe((hole) => {
+      this.nextHole = hole;
+      this.updateCountdown();
+    });
   }
 
   // Method to change the Hole Id (e.g., user clicks "Next Hole")
