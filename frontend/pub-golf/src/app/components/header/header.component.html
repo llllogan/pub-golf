@@ -1,6 +1,7 @@
 <div
   class="bg-blue-600 text-white p-4 flex flex-col md:flex-row items-center justify-between"
 >
+
   <div class="text-xl font-bold">
     Hole {{ currentHoleId }}: {{ currentHole!.name }} (Par
     {{ currentHole!.par }})
@@ -8,21 +9,37 @@
   <div class="text-sm mt-2 md:mt-0 md:ml-4" *ngIf="nextHole">
     Next: {{ nextHole.name }} in {{ countdown }}
   </div>
+
+
   <!-- Buttons to change the hole -->
   <div class="mt-4 flex space-x-2 px-2">
+    <button
+      class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+      *ngIf="!isEditingPar"
+      [routerLink]="['/']"
+    >
+      📋
+    </button>
+    <button
+      class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
+      *ngIf="!isEditingPar"
+      [routerLink]="['/overall-scores']"
+    >
+      🏆
+    </button>
     <button
     class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
     *ngIf="!isEditingPar"
     (click)="enableParEditing()"
     >
-      Edit
+      ⚙️
     </button>
     <button
     class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
     *ngIf="!isEditingPar"
     (click)="openInMaps()"
     >
-      Directions
+      🧭
     </button>
     <button
       class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
@@ -30,7 +47,7 @@
       (click)="changeHole(currentHoleId - 1)"
       [disabled]="currentHoleId <= 1"
     >
-      Previous
+      ⬅️
     </button>
     <button
       class="bg-white text-blue-600 font-semibold py-2 px-4 rounded"
@@ -38,9 +55,11 @@
       (click)="changeHole(currentHoleId + 1)"
       [disabled]="currentHoleId == 9"
     >
-      Next
+      ➡️
     </button>
 
+
+    
     <div *ngIf="isEditingPar">
       <input
         type="number"

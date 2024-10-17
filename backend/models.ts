@@ -11,7 +11,7 @@ import { Team, User, Hole, Score } from "./types.ts";
  * @returns An array of Team objects.
  */
 export function getAllTeams(db: DB): Team[] {
-    const result = db.query("SELECT id, name FROM teams") as Array<[number, string]>;
+    const result = db.query("SELECT id, name FROM teams WHERE id BETWEEN 1 AND 4") as Array<[number, string]>;
   
     const teams = result.map(([id, name]) => ({ id, name }));
     return teams;

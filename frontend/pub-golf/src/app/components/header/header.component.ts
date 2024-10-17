@@ -3,6 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HoleService } from '../../services/hole.service';
 import { ApiService } from '../../services/api.service';
+import { RouterModule, Router } from '@angular/router';
+import { LongPressDirective } from '../../directives/long-press.directive';
 
 interface Hole {
   id: number;
@@ -15,7 +17,7 @@ interface Hole {
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule, LongPressDirective],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
@@ -25,11 +27,11 @@ export class HeaderComponent implements OnInit {
   nextHole: Hole | undefined;
   countdown: string;
 
-    // Variables for editing par
-    isEditingPar: boolean = false;
-    editedPar: number;
+  // Variables for editing par
+  isEditingPar: boolean = false;
+  editedPar: number;
 
-  constructor(private holeService: HoleService, private apiService: ApiService) { 
+  constructor(private holeService: HoleService, private apiService: ApiService, private router: Router) { 
     this.countdown = '';
     this.currentHoleId = 0;
     this.editedPar = 0;
@@ -53,10 +55,14 @@ export class HeaderComponent implements OnInit {
       this.currentHole = hole;
     });
 
-    this.apiService.getHole(this.currentHoleId + 1).subscribe((hole) => {
-      this.nextHole = hole;
-      this.updateCountdown();
-    });
+    if (this.currentHole!.id > 9) {
+      this.nextHole = undefined;
+    } else {
+      this.apiService.getHole(this.currentHoleId + 1).subscribe((hole) => {
+        this.nextHole = hole;
+        this.updateCountdown();
+      });
+    }
   }
 
   // Method to change the Hole Id (e.g., user clicks "Next Hole")
