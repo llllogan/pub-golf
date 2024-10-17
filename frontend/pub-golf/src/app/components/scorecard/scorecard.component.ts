@@ -5,12 +5,17 @@ import { CommonModule } from '@angular/common'; // For common directives like *n
 import { FormsModule } from '@angular/forms'; // For two-way data binding
 import { ApiService } from '../../services/api.service'; // Adjust the path if necessary
 import { HoleService } from '../../services/hole.service'; // To get the current hole
+import { map, switchMap, catchError } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
 
 // Interfaces for data models
 interface Team {
   id: number;
   name: string;
   players: Player[];
+  averageSips?: number | null; // Average sips for the team
+  differenceFromPar?: number | null; // Difference from the par
+  isLeading?: boolean; // Indicates if the team is leading
 }
 
 interface Player {
@@ -30,6 +35,8 @@ interface Player {
 export class ScorecardComponent implements OnInit {
   teams: Team[] = [];
   currentHoleId: number = 0;
+  currentPar: number = 0;
+  leadingTeamId: number | null = null;
 
   constructor(
     private apiService: ApiService,
@@ -40,58 +47,124 @@ export class ScorecardComponent implements OnInit {
     // Subscribe to the currentHoleId from HoleService
     this.holeService.currentHoleId$.subscribe((holeId) => {
       this.currentHoleId = holeId;
+      this.loadHoleData();
       this.loadTeamsAndPlayers();
     });
+  }
+
+  loadHoleData() {
+    this.apiService.getHole(this.currentHoleId).subscribe(
+      (hole) => {
+        this.currentPar = hole.par;
+      },
+      (error) => {
+        console.error('Error fetching hole data:', error);
+      }
+    );
   }
 
   loadTeamsAndPlayers() {
     // Clear previous data
     this.teams = [];
+    this.leadingTeamId = null;
 
     // Fetch all teams
     this.apiService.getTeams().subscribe(
       (teamsData) => {
-        teamsData.forEach((team) => {
-          // Fetch players for each team
-          this.apiService.getPlayersByTeam(team.id).subscribe(
-            (playersData) => {
-              // Initialize players with their scores
-              const playersWithScores: Player[] = playersData.map((player) => ({
-                ...player,
-                sips: null,
-              }));
-
-              // Fetch scores for each player
-              playersWithScores.forEach((player) => {
+        // For each team, fetch players and their scores
+        const teamObservables = teamsData.map((team) =>
+          this.apiService.getPlayersByTeam(team.id).pipe(
+            switchMap((playersData) => {
+              const playerScoreObservables = playersData.map((player) =>
                 this.apiService
                   .getUserScore(player.id, this.currentHoleId)
-                  .subscribe(
-                    (score) => {
-                      player.sips = score.sips;
-                    },
-                    (error) => {
-                      // Handle error (e.g., no score exists)
-                      player.sips = null;
-                    }
+                  .pipe(
+                    map((score) => ({
+                      ...player,
+                      sips: score.sips,
+                    })),
+                    catchError(() =>
+                      of({
+                        ...player,
+                        sips: null,
+                      })
+                    )
+                  )
+              );
+              return forkJoin(playerScoreObservables).pipe(
+                map((playersWithScores) => {
+                  // Calculate average sips for the team
+                  const totalSips = playersWithScores.reduce(
+                    (sum, player) => sum + (player.sips || 0),
+                    0
                   );
-              });
+                  const numPlayersWithScores = playersWithScores.filter(
+                    (player) => player.sips !== null
+                  ).length;
+                  const averageSips =
+                    numPlayersWithScores > 0
+                      ? totalSips / numPlayersWithScores
+                      : null;
 
-              // Add team with players to the teams array
-              this.teams.push({
-                ...team,
-                players: playersWithScores,
-              });
-            },
-            (error) => {
-              console.error(`Error fetching players for team ${team.id}:`, error);
-            }
-          );
-        });
+                  // Calculate difference from par
+                  const differenceFromPar =
+                    averageSips !== null && this.currentPar !== undefined
+                      ? averageSips - this.currentPar
+                      : null;
+
+                  return {
+                    ...team,
+                    players: playersWithScores,
+                    averageSips,
+                    differenceFromPar,
+                  };
+                })
+              );
+            })
+          )
+        );
+
+        forkJoin(teamObservables).subscribe(
+          (teamsWithPlayers) => {
+            this.teams = teamsWithPlayers;
+
+            // Identify the leading team (team with the lowest average sips)
+            this.identifyLeadingTeam();
+          },
+          (error) => {
+            console.error('Error fetching teams and players:', error);
+          }
+        );
       },
       (error) => {
         console.error('Error fetching teams:', error);
       }
     );
+  }
+
+  // New method to identify the leading team
+  identifyLeadingTeam() {
+    let lowestAverage = Infinity;
+    let leadingTeamId = null;
+
+    this.teams.forEach((team) => {
+      if (
+        team.averageSips !== null &&
+        team.averageSips! < lowestAverage &&
+        team.averageSips! >= 0
+      ) {
+        lowestAverage = team.averageSips!;
+        leadingTeamId = team.id;
+      }
+    });
+
+    this.leadingTeamId = leadingTeamId;
+
+    // Mark the leading team
+    this.teams = this.teams.map((team) => ({
+      ...team,
+      isLeading: team.id === this.leadingTeamId,
+    }));
   }
 
   // Method to update a player's score

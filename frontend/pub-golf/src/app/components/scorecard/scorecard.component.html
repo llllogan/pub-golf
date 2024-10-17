@@ -1,11 +1,21 @@
-<!-- scorecard.component.html -->
-
 <div class="p-4 space-y-6">
     <!-- Loop through teams -->
     <div *ngFor="let team of teams">
       <!-- Team Header -->
-      <div class="bg-gray-200 p-2 rounded">
-        <h2 class="text-lg font-bold">{{ team.name }}</h2>
+      <div class="bg-gray-200 p-2 rounded flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <h2 class="text-lg font-bold">{{ team.name }}</h2>
+          <!-- Display crown emoji if the team is leading -->
+          <span *ngIf="team.isLeading" class="text-xl">👑</span>
+        </div>
+        <div *ngIf="team.averageSips !== null" class="text-sm">
+          <!-- Display average sips and difference from par -->
+          Avg Sips: {{ team.averageSips | number:'1.1-2' }}
+          (<span [ngClass]="{'text-green-600': team.differenceFromPar! < 0, 'text-red-600': team.differenceFromPar! > 0}">
+            {{ team.differenceFromPar! > 0 ? '+' : '' }}{{ team.differenceFromPar | number:'1.1-2' }}
+          </span>
+          vs Par)
+        </div>
       </div>
       <!-- Players List -->
       <div class="space-y-2 mt-2">
