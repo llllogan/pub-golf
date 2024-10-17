@@ -1,0 +1,65 @@
+<div class="p-4 space-y-6">
+    <h1 class="text-2xl font-bold">Overall Scores</h1>
+  
+    <!-- Display overall winning team -->
+    <div *ngIf="overallWinningTeam" class="bg-green-100 p-4 rounded">
+      <h2 class="text-xl font-bold">
+        Overall Winning Team: {{ overallWinningTeam.name }} 🎉
+      </h2>
+    </div>
+  
+    <!-- List of holes -->
+    <div *ngFor="let holeResult of holes" class="border-b pb-4 mb-4">
+      <h2 class="text-lg font-bold">
+        Hole {{ holeResult.hole.id }}: {{ holeResult.hole.name }} (Par
+        {{ holeResult.hole.par }})
+      </h2>
+  
+      <!-- Display winning team for the hole -->
+      <div *ngIf="holeResult.winningTeam" class="mt-2">
+        Winning Team: <strong>{{ holeResult.winningTeam.name }}</strong>
+      </div>
+  
+      <!-- Team results -->
+      <div class="mt-2">
+        <table class="w-full text-left">
+          <thead>
+            <tr>
+              <th class="border-b py-2">Team</th>
+              <th class="border-b py-2">Avg Sips</th>
+              <th class="border-b py-2">Difference from Par</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let teamResult of holeResult.teamResults"
+              [ngClass]="{
+                'bg-yellow-100': teamResult.team.id ===
+                  holeResult.winningTeam?.id
+              }"
+            >
+              <td class="py-2">{{ teamResult.team.name }}</td>
+              <td class="py-2">
+                {{ teamResult.averageSips !== null
+                  ? (teamResult.averageSips | number : '1.1-2')
+                  : 'N/A' }}
+              </td>
+              <td class="py-2">
+                <span
+                  [ngClass]="{
+                    'text-green-600': teamResult.differenceFromPar! < 0,
+                    'text-red-600': teamResult.differenceFromPar! > 0
+                  }"
+                >
+                  {{ teamResult.differenceFromPar !== null
+                    ? (teamResult.differenceFromPar > 0 ? '+' : '') +
+                      (teamResult.differenceFromPar | number : '1.1-2')
+                    : 'N/A' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>

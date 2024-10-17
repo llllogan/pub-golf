@@ -1,7 +1,7 @@
 // models.ts
 
 import { DB } from "./deps.ts";
-import { Team, User, Hole, UserScore } from "./types.ts";
+import { Team, User, Hole, Score } from "./types.ts";
 
 /* Team Operations */
 
@@ -118,4 +118,26 @@ export function getHole(db: DB, hole_id: number): Hole | null {
        ON CONFLICT(user_id, hole_id) DO UPDATE SET sips=excluded.sips`,
       [user_id, hole_id, sips]
     );
+  }
+
+  /**
+   * 
+   * @param db Gets the scores for a hole
+   * @param holeId 
+   * @returns 
+   */
+  export function getScoresByHole(db: DB, holeId: number): Score[] {
+    const scores: Score[] = [];
+  
+    const query = `
+      SELECT user_id, sips
+      FROM scores
+      WHERE hole_id = ?
+    `;
+  
+    for (const [user_id, sips] of db.query<[number, number]>(query, [holeId])) {
+      scores.push({ user_id, hole_id: holeId, sips });
+    }
+  
+    return scores;
   }

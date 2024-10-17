@@ -3,7 +3,7 @@
 import { Router, RouterContext } from "./deps.ts";
 import { DB } from "./deps.ts";
 import * as models from "./models.ts";
-import { Team, User, Hole } from "./types.ts";
+import { Team, User, Hole, Score } from "./types.ts";
 
 /**
  * Initializes the router and defines API endpoints.
@@ -151,6 +151,34 @@ export function initRoutes(db: DB): Router {
       context.response.body = { message: "Score updated successfully" };
     }
   );
+
+  // Get all scores for a hole
+  router.get(
+    "/holes/:hole_id/scores", 
+    (context: RouterContext<"/holes/:hole_id/scores">) => {
+    const { hole_id } = context.params;
+    const holeId = parseInt(hole_id);
+
+    if (isNaN(holeId)) {
+      context.response.status = 400;
+      context.response.body = { error: "Invalid hole ID" };
+      return;
+    }
+
+    // Check if the hole exists
+    const hole: Hole | null = models.getHole(db, holeId);
+
+    if (!hole) {
+      context.response.status = 404;
+      context.response.body = { error: "Hole not found" };
+      return;
+    }
+
+    // Get scores for the hole
+    const scores: Score[] = models.getScoresByHole(db, holeId);
+
+    context.response.body = scores;
+  });
 
   return router;
 }
