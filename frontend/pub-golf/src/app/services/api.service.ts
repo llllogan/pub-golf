@@ -31,7 +31,7 @@ interface Team {
   providedIn: 'root',
 })
 export class ApiService {
-  private apiUrl = 'http://144.6.244.168:1080'; // Adjust the URL to match your backend
+  private apiUrl = 'http://10.18.7.152:1080'; // Adjust the URL to match your backend
 
   constructor(private http: HttpClient) {}
 
