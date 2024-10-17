@@ -72,7 +72,7 @@ export function getAllHoles(db: DB): Hole[] {
 
   const query = `
     SELECT id, name, par, location, time
-    FROM holes
+    FROM holes WHERE id BETWEEN 1 AND 9
   `;
 
   for (const [id, name, par, location, time] of db.query<
