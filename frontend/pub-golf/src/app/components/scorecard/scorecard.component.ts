@@ -174,7 +174,7 @@ export class ScorecardComponent implements OnInit {
         .updateUserScore(player.id, this.currentHoleId, player.sips)
         .subscribe(
           () => {
-            // Successfully updated score
+            
           },
           (error) => {
             console.error('Error updating player score:', error);
