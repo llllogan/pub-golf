@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common'; // For common directives
 import { ApiService } from '../../services/api.service';
 import { forkJoin } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
 
 interface Hole {
   id: number;
@@ -42,7 +43,7 @@ interface TeamResult {
 @Component({
   selector: 'app-overall-scores',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './overall-scores.component.html',
   styleUrls: ['./overall-scores.component.css'],
 })
@@ -52,6 +53,9 @@ export class OverallScoresComponent implements OnInit {
   players: User[] = [];
   scores: Score[] = [];
   overallWinningTeam: Team | null = null;
+
+  initalizeScoreReset: boolean = false;
+  resetPassword = "";
 
   constructor(private apiService: ApiService) {}
 
@@ -167,5 +171,28 @@ export class OverallScoresComponent implements OnInit {
     });
 
     this.overallWinningTeam = overallWinner;
+  }
+
+  initalizeReset() {
+    this.initalizeScoreReset = true;
+  }
+
+  cancelReset() {
+    this.initalizeScoreReset = false;
+    this.resetPassword = "";
+  }
+
+  reset() {
+    if (this.resetPassword === "4") {
+      this.apiService.resetScores().subscribe(() => {
+        this.loadOverallScores();
+        this.initalizeScoreReset = false;
+        this.resetPassword = "";
+      } );
+    } else {
+      alert("Incorrect password");
+      this.initalizeScoreReset = false;
+      this.resetPassword = "";
+    }
   }
 }
