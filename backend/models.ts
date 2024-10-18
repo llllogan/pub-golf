@@ -203,3 +203,19 @@ export function getAllScores(db: DB): Score[] {
 
   return scores;
 }
+
+/**
+ * Clears all scores from the user_scores table.
+ * @param db - The database connection.
+ */
+export function clearAllScores(db: DB): void {
+  db.query("DELETE FROM user_scores");
+}
+
+/**
+ * Resets the par for all holes to 0.
+ * @param db - The database connection.
+ */
+export function resetParForAllHoles(db: DB): void {
+  db.query("UPDATE holes SET par = 0");
+}

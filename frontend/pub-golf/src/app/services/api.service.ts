@@ -109,4 +109,9 @@ export class ApiService {
   getAllScores(): Observable<Score[]> {
     return this.http.get<Score[]>(`${this.apiUrl}/scores`);
   }
+
+  // Reset all scores
+  resetScores(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/reset`);
+  }
 }

@@ -216,5 +216,36 @@ export function initRoutes(db: DB): Router {
     }
   });
 
+  /**
+   * POST /reset
+   * Resets all scores and sets the par of each hole to 0.
+   * **Security Note:** This endpoint should be protected to prevent unauthorized access.
+   */
+  router.get("/reset", (context: RouterContext<"/reset">) => {
+    try {
+      // Begin Transaction to ensure atomicity
+      db.query("BEGIN TRANSACTION");
+
+      // Clear all scores
+      models.clearAllScores(db);
+
+      // Reset par for all holes to 0
+      models.resetParForAllHoles(db);
+
+      // Commit Transaction
+      db.query("COMMIT");
+
+      // Respond with success message
+      context.response.status = 200;
+      context.response.body = { message: "Scores cleared and pars reset to 0 successfully." };
+    } catch (error) {
+      console.error("Error during reset:", error);
+      // Rollback Transaction in case of error
+      db.query("ROLLBACK");
+      context.response.status = 500;
+      context.response.body = { error: "An error occurred while resetting scores and pars." };
+    }
+  });
+
   return router;
 }
